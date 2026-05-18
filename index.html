@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRCA – Monitoraggio Finezza Creme</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --hdr:#3a3a3a;--hdr2:#4a4a4a;--irca-red:#cc1111;
+  --lime:#7dc63b;--lime-dark:#5a9a20;--lime-light:#edf7e0;
+  --lime-row:#c8edaa;--bg:#f2f2ee;--card:#fff;
+  --border:#d0d0c8;--text:#222;--muted:#666;
+  --btn-green:#5a9a20;--btn-red:#cc1111;--btn-blue:#1a6abf;
+  --btn-teal:#0e8a7a;--btn-orange:#e07820;
+  --col-portata:#1a6abf;--col-potenza:#8b5cf6;--col-micron:#5a9a20;--col-micron2:#0a6a50;
+  --radius:4px;--shadow:0 1px 3px rgba(0,0,0,0.13);
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+
+/* HEADER */
+header{background:var(--hdr);height:62px;display:flex;align-items:center;padding:0 1rem;gap:0;position:sticky;top:0;z-index:300;box-shadow:0 2px 5px rgba(0,0,0,0.35)}
+.logo-wrap{background:var(--irca-red);width:60px;height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-right:1rem;flex-shrink:0;cursor:pointer}
+.logo-wrap .irca-txt{font-size:22px;font-weight:900;color:#fff;font-style:italic;letter-spacing:1px;line-height:1}
+.logo-wrap .since{font-size:7px;color:rgba(255,255,255,0.75);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+nav{display:flex;align-items:center;gap:2px}
+nav a{color:#ccc;padding:0 14px;height:62px;display:flex;align-items:center;font-size:12px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.15s;text-decoration:none;white-space:nowrap}
+nav a:hover{color:#fff;background:rgba(255,255,255,0.07)}
+nav a.active{color:#fff;border-bottom-color:var(--lime)}
+/* App title — centered absolutely so it's always in the middle of the header */
+.hdr-title{
+    position:absolute;left:50%;transform:translateX(-50%);
+    color:#fff;font-size:17px;font-weight:700;
+    letter-spacing:0.4px;white-space:nowrap;
+    pointer-events:none;
+    text-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+.hdr-right{display:flex;gap:6px;align-items:center;margin-left:auto}
+.hdr-badge{background:#555;color:#ddd;padding:4px 10px;border-radius:3px;font-size:11px;font-weight:600}
+.hdr-badge.red{background:var(--irca-red);color:#fff}
+
+/* TOOLBAR */
+.toolbar{background:#2a2a2a;padding:3px 1rem;display:flex;align-items:center;gap:10px;font-size:11px;color:#aaa;border-bottom:1px solid #111}
+.clock{font-weight:700;color:#e0e0e0;font-size:12px;letter-spacing:0.5px}
+
+/* PAGES */
+.page{display:none;padding:1.25rem;max-width:100%;margin:0 auto}
+.page.active{display:block}
+
+/* SECTION BOX */
+.section-box{background:#fff;border:1px solid var(--border);border-left:4px solid var(--lime-dark);padding:8px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;box-shadow:var(--shadow)}
+.section-box h2{font-size:14px;font-weight:700;color:var(--lime-dark)}
+.section-box p{font-size:11px;color:var(--muted)}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1rem;overflow:hidden}
+.card-head{background:var(--hdr2);color:#e8e8e8;padding:7px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:8px}
+.card-body{padding:1.1rem}
+
+/* FORM */
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px}
+.fg input,.fg select{height:32px;border:1px solid #bbb;border-radius:3px;padding:0 9px;font-size:13px;color:var(--text);background:#fff;outline:none;transition:border 0.15s;width:100%}
+.fg input:focus,.fg select:focus{border-color:var(--lime-dark);box-shadow:0 0 0 2px rgba(90,154,32,0.18)}
+.fg input::placeholder{color:#c0c0c0;opacity:1}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.85rem}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.85rem}
+
+/* AT BLOCKS */
+.at-block{background:var(--lime-light);border:1px solid #c0dca0;border-radius:var(--radius);padding:0.9rem}
+.at-title{font-size:11px;font-weight:800;color:var(--lime-dark);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:0.6rem;padding-bottom:5px;border-bottom:2px solid var(--lime-dark)}
+
+/* BUTTONS */
+.btn{height:32px;padding:0 14px;border-radius:3px;border:1px solid transparent;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:0.4px;transition:all 0.15s;white-space:nowrap}
+.btn:active{transform:scale(0.97)}
+.btn-lime{background:var(--lime);color:#fff;border-color:var(--lime-dark)}.btn-lime:hover{background:var(--lime-dark)}
+.btn-green{background:var(--btn-green);color:#fff;border-color:#3d7010}.btn-green:hover{background:#3d7010}
+.btn-orange{background:var(--btn-orange);color:#fff;border-color:#b05e10}.btn-orange:hover{background:#b05e10}
+.btn-red{background:var(--btn-red);color:#fff;border-color:#990d0d}.btn-red:hover{background:#990d0d}
+.btn-blue{background:var(--btn-blue);color:#fff;border-color:#134f8f}.btn-blue:hover{background:#134f8f}
+.btn-teal{background:var(--btn-teal);color:#fff;border-color:#086558}.btn-teal:hover{background:#086558}
+.btn-gray{background:#888;color:#fff;border-color:#666}.btn-gray:hover{background:#666}
+.btn-outline{background:#fff;color:var(--text);border-color:#bbb}.btn-outline:hover{background:#f0f0f0}
+.btn-purple{background:#7c3aed;color:#fff;border-color:#5b21b6}.btn-purple:hover{background:#5b21b6}
+.btn-sm{height:27px;padding:0 10px;font-size:10px}
+.btn-row{display:flex;gap:7px;justify-content:flex-end;padding-top:0.9rem;margin-top:0.9rem;border-top:1px solid var(--border)}
+
+/* NOW button — green, full height of 32px field */
+.now-btn{height:32px;padding:0 10px;border-radius:3px;border:1px solid #3d7010;background:#5a9a20;color:#fff;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;transition:background 0.15s}
+.now-btn:hover{background:#3d7010}
+.now-btn svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* LINEA BUTTONS */
+.linea-group{display:flex;gap:5px;flex-wrap:wrap}
+.linea-btn{height:32px;padding:0 11px;border-radius:3px;border:2px solid #bbb;background:#f0f0f0;color:#555;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap;letter-spacing:0.3px}
+.linea-btn:hover{border-color:#888;background:#e0e0e0}
+.linea-btn.active{background:var(--btn-red);border-color:#990d0d;color:#fff}
+/* Linea type styling */
+.linea-btn.bianche{background:#f0f0f0;border-color:#bbb;color:#444}
+.linea-btn.bianche:hover{background:#e2e2e2;border-color:#888}
+.linea-btn.bianche.active{background:var(--btn-red);border-color:#990d0d;color:#fff}
+.linea-btn.scure{background:#f5ddc8;border-color:#a0622a;color:#5a2a0a}
+.linea-btn.scure:hover{background:#e8c8a8;border-color:#7a4215}
+.linea-btn.scure.active{background:var(--btn-red);border-color:#990d0d;color:#fff}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:0.9rem}
+.stat-card{background:var(--lime-light);border:2px solid var(--lime);border-radius:var(--radius);padding:0.8rem;text-align:center}
+.stat-val{font-size:22px;font-weight:800;color:var(--lime-dark)}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px}
+
+/* RESULT PANEL */
+.result-panel{background:#fff;border:2px solid var(--lime);border-radius:var(--radius);margin-bottom:0.9rem;overflow:hidden;display:none}
+.result-panel.open{display:block}
+.rp-head{background:var(--lime-dark);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;justify-content:space-between}
+
+/* TABLE */
+.tbl-outer{width:100%;overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);font-size:12px}
+.tbl-outer table{width:100%;min-width:1100px;border-collapse:collapse;table-layout:auto}
+.tbl-outer thead tr{background:var(--hdr)}
+.tbl-outer thead th{padding:8px 10px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;color:#ddd;white-space:nowrap}
+.tbl-outer thead th.th-portata{color:#93c5fd}
+.tbl-outer thead th.th-potenza{color:#c4b5fd}
+.tbl-outer thead th.th-micron{color:#86efac}
+.tbl-outer tbody tr{border-bottom:1px solid #ddd;cursor:pointer;transition:background 0.1s}
+.tbl-outer tbody tr:nth-child(even){background:#f7f7f4}
+.tbl-outer tbody tr:hover{background:var(--lime-row)}
+.tbl-outer tbody td{padding:7px 10px;vertical-align:middle;word-break:break-word}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase}
+.b-wh{background:#f0f0f0;color:#555;border:1px solid #ccc}
+.b-dk{background:#6b3a1f;color:#f5ddc8;border:1px solid #4a2410}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);border:2px solid var(--lime-dark);box-shadow:0 10px 40px rgba(0,0,0,0.3);width:92%;max-width:760px;max-height:92vh;overflow-y:auto}
+.modal-hd{background:var(--hdr2);color:#eee;padding:11px 16px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px}
+.modal-bd{padding:1.2rem}
+.mcl{background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;line-height:1;padding:0 4px}.mcl:hover{color:#fff}
+
+/* PASSWORD BOX */
+.pwd-box{background:#fff;border-radius:var(--radius);border:2px solid var(--irca-red);box-shadow:0 8px 32px rgba(0,0,0,0.3);width:320px;padding:1.5rem;text-align:center}
+.pwd-box h3{font-size:14px;font-weight:700;color:var(--irca-red);margin-bottom:0.4rem}
+.pwd-box p{font-size:11px;color:var(--muted);margin-bottom:0.9rem}
+.pwd-box input{width:100%;height:40px;border:2px solid #ccc;border-radius:3px;padding:0 12px;font-size:20px;letter-spacing:6px;text-align:center;margin-bottom:0.7rem;outline:none}
+.pwd-box input:focus{border-color:var(--irca-red)}
+.pwd-err{color:var(--irca-red);font-size:11px;margin-bottom:0.6rem;display:none}
+
+/* ── VALIDATION ── */
+.field-error input, .field-error select, .field-error .linea-group {
+  border-color: var(--irca-red) !important;
+  background: #fff5f5 !important;
+  box-shadow: 0 0 0 2px rgba(190,10,10,0.15);
+  border-radius: 3px;
+  animation: shake 0.3s ease;
+}
+.field-error label { color: var(--irca-red) !important; font-weight: 700; }
+.field-error-msg {
+  display: block;
+  color: var(--irca-red);
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 3px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-4px)}
+  75%{transform:translateX(4px)}
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+/* Validation summary banner */
+#val-banner {
+  display: none;
+  background: #fff0f0;
+  border: 2px solid var(--irca-red);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  color: var(--irca-red);
+  font-size: 12px;
+  font-weight: 700;
+}
+#val-banner ul { margin: 6px 0 0 16px; font-weight: 400; font-size: 11px; line-height: 1.8; }
+
+/* ABOUT BOX */
+.about-box{background:#fff;border-radius:var(--radius);border:2px solid var(--lime-dark);box-shadow:0 8px 32px rgba(0,0,0,0.3);width:340px;padding:1.8rem;text-align:center}
+.about-box .irca-big{font-size:42px;font-weight:900;font-style:italic;color:var(--irca-red);line-height:1}
+.about-box .since-sm{font-size:9px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem}
+.about-box h3{font-size:13px;font-weight:700;color:var(--lime-dark);margin-bottom:0.4rem}
+.about-box p{font-size:11px;color:var(--muted);line-height:1.6}
+.about-box .author{margin-top:1rem;padding-top:0.8rem;border-top:1px solid #eee;font-size:12px;color:#555;font-weight:600}
+
+/* SEARCH ROW */
+.srow{display:flex;gap:0.7rem;align-items:flex-end;flex-wrap:wrap}
+.srow .fg{flex:1;min-width:130px}
+
+/* EMPTY */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:13px;background:#fff;border:1px solid var(--border);border-radius:4px}
+.act-btns{display:flex;gap:3px;white-space:nowrap}
+.eb,.db,.cb{background:none;border:1px solid transparent;border-radius:2px;cursor:pointer;padding:3px 6px;font-size:14px;transition:all 0.1s;line-height:1}
+.eb{color:#5a9a20}.eb:hover{background:var(--lime-light);border-color:#bbb}
+.db{color:var(--irca-red)}.db:hover{background:#fff0f0;border-color:#ecc}
+.cb{color:#2563eb}.cb:hover{background:#eff6ff;border-color:#93c5fd}
+
+/* REC COUNT */
+.rec-count{background:var(--lime-dark);color:#fff;border-radius:20px;padding:1px 9px;font-size:10px;font-weight:700;margin-left:6px}
+
+/* DELETED TAB */
+.del-badge{background:#cc1111;color:#fff;border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;margin-left:4px}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:10px 18px;border-radius:4px;font-size:13px;font-weight:600;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);color:#fff}
+.toast.show{display:block}
+.toast.ok{background:var(--btn-green)}
+.toast.err{background:var(--irca-red)}
+.toast.info{background:var(--btn-blue)}
+
+@media(max-width:700px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  header{padding:0 0.5rem}
+  .page{padding:0.75rem}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap" onclick="openAbout()" title="About">
+    <span class="irca-txt">irca</span>
+    <span class="since">SINCE 1919</span>
+  </div>
+  <nav>
+    <a class="active" id="nav-registra" onclick="showPage('registra',this)">+ Registrazione</a>
+    <a id="nav-ricerca" onclick="showPage('ricerca',this)">&#9776; Registrati</a>
+    <a id="nav-deleted" onclick="showPage('deleted',this)">&#128465; Eliminati <span class="del-badge" id="del-count">0</span></a>
+  </nav>
+  <div class="hdr-title">Monitoraggio Finezza Creme</div>
+  <div class="hdr-right">
+    <span class="hdr-badge red">PROD</span>
+  </div>
+</header>
+<div class="toolbar">
+  <span>&#128337;</span>
+  <span class="clock" id="clock">--:--:--</span>
+  <span style="opacity:0.5;margin:0 4px">|</span>
+  <span id="tdate" style="color:#bbb"></span>
+  <span style="margin-left:auto;font-size:10px;color:#777">
+    <span onclick="openAbout()" style="cursor:pointer;color:#aaa;text-decoration:underline">Info</span>
+  </span>
+</div>
+
+<!-- ══ REGISTRAZIONE ══ -->
+<div id="page-registra" class="page active" style="max-width:1300px;margin:0 auto">
+  <div class="section-box">
+    <div>
+      <h2>&#128196; Nuova Registrazione Finezza</h2>
+      <p>Compila tutti i campi e premi Salva — data e ora vengono impostate automaticamente</p>
+    </div>
+  </div>
+
+  <div id="val-banner" role="alert">
+    <span>&#9888; Campi obbligatori mancanti — compila i campi evidenziati prima di salvare:</span>
+    <ul id="val-banner-list"></ul>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="g4">
+        <div class="fg"><label>Lotto *</label><input type="text" id="r-lotto" placeholder="es. 2264011988"/></div>
+        <div class="fg"><label>Numero Prodotto *</label><input type="text" id="r-prodotto" placeholder="es. 11995350"/></div>
+        <div class="fg" style="grid-column:span 2"><label>Descrizione Prodotto</label><input type="text" id="r-desc" placeholder="es. IRCA CAO SML 1733/A [micron=18, p=0, P%=0]"/></div>
+      </div>
+      <div class="g4" style="margin-top:0.85rem">
+        <!-- LINEA as 4 toggle buttons -->
+        <div class="fg">
+          <label>Linea</label>
+          <div class="linea-group" id="r-linea-group">
+            <button class="linea-btn bianche" onclick="selectLinea('BIANCHE L1',this)">BL1</button>
+            <button class="linea-btn scure" onclick="selectLinea('SCURE L2',this)">SC2</button>
+            <button class="linea-btn scure" onclick="selectLinea('SCURE L3',this)">SC3</button>
+            <button class="linea-btn bianche" onclick="selectLinea('BIANCHE L4',this)">BL4</button>
+          </div>
+          <input type="hidden" id="r-linea" value=""/>
+        </div>
+        <!-- DATA + NOW -->
+        <div class="fg">
+          <label>Data</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="date" id="r-data" style="flex:1"/>
+            <button class="now-btn" onclick="sv('r-data',nowDate())" title="Imposta data di oggi">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+              Ora
+            </button>
+          </div>
+        </div>
+        <!-- ORA + NOW -->
+        <div class="fg">
+          <label>Ora [hh:mm]</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="time" id="r-ora" style="flex:1"/>
+            <button class="now-btn" onclick="sv('r-ora',nowTime())" title="Imposta ora attuale">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+              Ora
+            </button>
+          </div>
+        </div>
+        <!-- NOME OPERATORE -->
+        <div class="fg"><label>Nome Operatore</label><input type="text" id="r-note" placeholder="Nome (solo nome)..."/></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="gap:0.75rem">
+    <div class="card">
+      <div class="card-head">&#9654; AT1 — Primo Attrezzaggio</div>
+      <div class="card-body">
+        <div class="at-block">
+          <div class="at-title">AT1</div>
+          <div class="g3">
+            <div class="fg"><label style="color:var(--col-portata)">Portata [kg/h]</label><input type="number" id="r-at1-portata" placeholder="es. 1000" style="border-color:#93c5fd"/></div>
+            <div class="fg"><label style="color:var(--col-potenza)">Potenza [%]</label><input type="number" id="r-at1-potenza" placeholder="es. 1000" min="0" max="100" style="border-color:#c4b5fd"/></div>
+            <div class="fg"><label style="color:var(--col-micron)">Micron [μm]</label><input type="number" id="r-at1-micron" placeholder="es. 1000" style="border-color:#86efac"/></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">&#9654; AT2 — Secondo Attrezzaggio</div>
+      <div class="card-body">
+        <div class="at-block">
+          <div class="at-title">AT2</div>
+          <div class="g3">
+            <div class="fg"><label style="color:var(--col-portata)">Portata [kg/h]</label><input type="number" id="r-at2-portata" placeholder="es. 1000" style="border-color:#93c5fd"/></div>
+            <div class="fg"><label style="color:var(--col-potenza)">Potenza [%]</label><input type="number" id="r-at2-potenza" placeholder="es. 1000" min="0" max="100" style="border-color:#c4b5fd"/></div>
+            <div class="fg"><label style="color:var(--col-micron2)">Micron [μm]</label><input type="number" id="r-at2-micron" placeholder="es. 1000" style="border-color:#6ee7b7"/></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:0.25rem">
+    <button class="btn btn-gray" onclick="resetForm()">&#8635; Annulla</button>
+    <button class="btn btn-lime" onclick="salvaRegistrazione()">&#10003; Salva Registrazione</button>
+  </div>
+</div>
+
+<!-- ══ RICERCA / REGISTRATI ══ -->
+<div id="page-ricerca" class="page" style="max-width:100%;padding:1.25rem">
+  <div class="section-box">
+    <div>
+      <h2>&#9776; Dati Registrati &nbsp;<span class="rec-count" id="total-count">0</span></h2>
+      <p>Tutti i dati — filtra per prodotto, lotto o data</p>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-blue btn-sm" onclick="askPwd('export')">&#11015; Esporta</button>
+      <button class="btn btn-teal btn-sm" onclick="askPwd('import')">&#11014; Importa</button>
+      <button class="btn btn-red btn-sm" onclick="askPwd('resetAll')">&#9888; Reset Dati</button>
+      <button class="btn btn-green btn-sm" id="recover-btn" onclick="recoverLastReset()" style="display:none">&#8617; Ripristina Tutto</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(this)"/>
+    </div>
+  </div>
+
+  <!-- FILTRI -->
+  <div class="card">
+    <div class="card-head">&#128269; Filtri di Ricerca</div>
+    <div class="card-body">
+      <div class="srow">
+        <div class="fg" style="flex:1.5;min-width:160px">
+          <label>Numero Prodotto</label>
+          <input type="text" id="s-prodotto" placeholder="es. 11995350" oninput="cerca()"/>
+        </div>
+        <div class="fg"><label>Lotto</label><input type="text" id="s-lotto" placeholder="es. 226401..." oninput="cerca()"/></div>
+        <div class="fg">
+          <label>Linea</label>
+          <div class="linea-group" id="s-linea-group">
+            <button class="linea-btn bianche" onclick="filterLinea('BIANCHE L1',this)">BL1</button>
+            <button class="linea-btn scure" onclick="filterLinea('SCURE L2',this)">SC2</button>
+            <button class="linea-btn scure" onclick="filterLinea('SCURE L3',this)">SC3</button>
+            <button class="linea-btn bianche" onclick="filterLinea('BIANCHE L4',this)">BL4</button>
+          </div>
+          <input type="hidden" id="s-linea" value=""/>
+        </div>
+        <div class="fg"><label>Dal</label><input type="date" id="s-dal" onchange="cerca()"/></div>
+        <div class="fg"><label>Al</label><input type="date" id="s-al" onchange="cerca()"/></div>
+        <button class="btn btn-gray" onclick="resetCerca()">&#215; Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS PANEL -->
+  <div class="result-panel" id="prod-panel">
+    <div class="rp-head">
+      <span id="pp-title">Statistiche Prodotto</span>
+      <button class="btn btn-outline btn-sm" onclick="hideProdPanel()">&#215; Chiudi</button>
+    </div>
+    <div style="padding:0.9rem">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-val" id="st-n">0</div><div class="stat-lbl">Registrazioni</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-m1">—</div><div class="stat-lbl">Media Micron AT1</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-m2">—</div><div class="stat-lbl">Media Micron AT2</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-p">—</div><div class="stat-lbl">Media Portata</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="results-wrap"><div class="empty">Caricamento...</div></div>
+</div>
+
+<!-- ══ ELIMINATI ══ -->
+<div id="page-deleted" class="page" style="max-width:100%;padding:1.25rem">
+  <div class="section-box">
+    <div>
+      <h2>&#128465; Dati Eliminati &nbsp;<span class="del-badge" id="del-count2">0</span></h2>
+      <p>Registro dei dati eliminati — puoi ripristinarli</p>
+    </div>
+    <button class="btn btn-red btn-sm" onclick="askPwd('clearTrash')">&#9888; Svuota Cestino</button>
+  </div>
+  <div id="deleted-wrap"><div class="empty">Nessun dato eliminato.</div></div>
+</div>
+
+<!-- ══ MODAL MODIFICA ══ -->
+<div class="overlay" id="edit-ov">
+  <div class="modal">
+    <div class="modal-hd">&#9998; Modifica Registrazione<button class="mcl" onclick="closeEdit()">&#215;</button></div>
+    <div class="modal-bd">
+      <div id="eval-banner" style="display:none;background:#fff0f0;border:2px solid var(--irca-red);border-radius:4px;padding:10px 14px;margin-bottom:12px;color:var(--irca-red);font-size:12px;font-weight:700;">
+        <span>&#9888; Campi obbligatori mancanti:</span>
+        <ul id="eval-banner-list" style="margin:6px 0 0 16px;font-weight:400;font-size:11px;line-height:1.8;"></ul>
+      </div>
+      <input type="hidden" id="e-id"/>
+      <div class="g4" style="gap:0.8rem">
+        <div class="fg"><label>Lotto *</label><input type="text" id="e-lotto"/></div>
+        <div class="fg"><label>N° Prodotto *</label><input type="text" id="e-prodotto"/></div>
+        <div class="fg" style="grid-column:span 2"><label>Descrizione</label><input type="text" id="e-desc"/></div>
+        <div class="fg">
+          <label>Linea</label>
+          <div class="linea-group" id="e-linea-group">
+            <button class="linea-btn bianche" onclick="selectLineaEdit('BIANCHE L1',this)">BL1</button>
+            <button class="linea-btn scure" onclick="selectLineaEdit('SCURE L2',this)">SC2</button>
+            <button class="linea-btn scure" onclick="selectLineaEdit('SCURE L3',this)">SC3</button>
+            <button class="linea-btn bianche" onclick="selectLineaEdit('BIANCHE L4',this)">BL4</button>
+          </div>
+          <input type="hidden" id="e-linea"/>
+        </div>
+        <div class="fg"><label>Data</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="date" id="e-data" style="flex:1"/>
+            <button class="now-btn" onclick="sv('e-data',nowDate())">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg> Ora
+            </button>
+          </div>
+        </div>
+        <div class="fg"><label>Ora</label>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="time" id="e-ora" style="flex:1"/>
+            <button class="now-btn" onclick="sv('e-ora',nowTime())">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg> Ora
+            </button>
+          </div>
+        </div>
+        <div class="fg"><label>Nome Operatore</label><input type="text" id="e-note"/></div>
+      </div>
+      <div class="g2" style="gap:0.75rem;margin-top:0.85rem">
+        <div class="at-block">
+          <div class="at-title">AT1</div>
+          <div class="g3">
+            <div class="fg"><label style="color:var(--col-portata)">Portata [kg/h]</label><input type="number" id="e-at1-portata" style="border-color:#93c5fd"/></div>
+            <div class="fg"><label style="color:var(--col-potenza)">Potenza [%]</label><input type="number" id="e-at1-potenza" style="border-color:#c4b5fd"/></div>
+            <div class="fg"><label style="color:var(--col-micron)">Micron [μm]</label><input type="number" id="e-at1-micron" style="border-color:#86efac"/></div>
+          </div>
+        </div>
+        <div class="at-block">
+          <div class="at-title">AT2</div>
+          <div class="g3">
+            <div class="fg"><label style="color:var(--col-portata)">Portata [kg/h]</label><input type="number" id="e-at2-portata" style="border-color:#93c5fd"/></div>
+            <div class="fg"><label style="color:var(--col-potenza)">Potenza [%]</label><input type="number" id="e-at2-potenza" style="border-color:#c4b5fd"/></div>
+            <div class="fg"><label style="color:var(--col-micron2)">Micron [μm]</label><input type="number" id="e-at2-micron" style="border-color:#6ee7b7"/></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gray" onclick="closeEdit()">Annulla</button>
+        <button class="btn btn-lime" onclick="salvaModifica()">&#10003; Salva Modifiche</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UNIVERSAL PASSWORD MODAL ══ -->
+<div class="overlay" id="pwd-ov">
+  <div class="pwd-box">
+    <h3 id="pwd-title">&#128274; Accesso Richiesto</h3>
+    <p id="pwd-desc">Inserisci la password per continuare</p>
+    <input type="password" id="pwd-in" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter')confirmPwd()"/>
+    <div class="pwd-err" id="pwd-err">&#10006; Password errata — riprova</div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="closePwd()">Annulla</button>
+      <button class="btn btn-red btn-sm" id="pwd-confirm-btn" onclick="confirmPwd()">Conferma</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT PASSWORD MODAL ══ -->
+<div class="overlay" id="epwd-ov">
+  <div class="pwd-box">
+    <h3>&#128274; Modifica Protetta</h3>
+    <p>Inserisci la password per modificare</p>
+    <input type="password" id="epwd-in" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter')confirmEditPwd()"/>
+    <div class="pwd-err" id="epwd-err">&#10006; Password errata — riprova</div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="g('epwd-ov').classList.remove('open')">Annulla</button>
+      <button class="btn btn-lime btn-sm" onclick="confirmEditPwd()">&#9998; Modifica</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ABOUT ══ -->
+<div class="overlay" id="about-ov">
+  <div class="about-box">
+    <div class="irca-big">irca</div>
+    <div class="since-sm">SINCE 1919</div>
+    <h3>Monitoraggio Finezza Creme</h3>
+    <p>Applicazione per il monitoraggio e la registrazione della finezza delle creme nei processi produttivi IRCA.</p>
+    <p style="margin-top:0.5rem">Versione 4.0 &nbsp;·&nbsp; 2026</p>
+    <div class="author">&#128100; Sviluppato da <strong>Saad</strong></div>
+    <div style="margin-top:1rem"><button class="btn btn-lime" onclick="g('about-ov').classList.remove('open')">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='irca_finezza_v3';
+const KEY_TRASH='irca_finezza_trash';
+const DPWD='4344';   // delete / edit / import / export
+const MPWD='4434';   // master — reset all / ripristina
+let pendingAction=null, pendingEditId=null, clockOff=0, _pendingRestoreId=null;
+
+/* ── DATA ── */
+function getData(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}}
+function saveData(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function getTrash(){try{return JSON.parse(localStorage.getItem(KEY_TRASH)||'[]')}catch{return[]}}
+function saveTrash(d){localStorage.setItem(KEY_TRASH,JSON.stringify(d))}
+
+function g(id){return document.getElementById(id)}
+function v(id){return g(id)?g(id).value.trim():''}
+function sv(id,val){if(g(id))g(id).value=val}
+
+/* ── CLOCK ── */
+async function initClock(){
+  try{
+    const r=await fetch('https://worldtimeapi.org/api/ip',{signal:AbortSignal.timeout(5000)});
+    const j=await r.json();clockOff=new Date(j.datetime).getTime()-Date.now();
+  }catch{clockOff=0}
+  tickClock();sv('r-data',nowDate());sv('r-ora',nowTime());
+}
+function now(){return new Date(Date.now()+clockOff)}
+function p2(x){return String(x).padStart(2,'0')}
+function nowDate(){const n=now();return`${n.getFullYear()}-${p2(n.getMonth()+1)}-${p2(n.getDate())}`}
+function nowTime(){const n=now();return`${p2(n.getHours())}:${p2(n.getMinutes())}`}
+function tickClock(){
+  const n=now();
+  g('clock').textContent=`${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
+  const days=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const mons=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  g('tdate').textContent=`${days[n.getDay()]} ${p2(n.getDate())} ${mons[n.getMonth()]} ${n.getFullYear()}`;
+  setTimeout(tickClock,1000);
+}
+
+/* ── NAV ── */
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  g('page-'+id).classList.add('active');el.classList.add('active');
+  if(id==='ricerca'){updateCount();cerca();}
+  if(id==='deleted'){renderDeleted();}
+}
+
+/* ── TOAST ── */
+function toast(msg,type='ok'){
+  const t=g('toast');t.textContent=msg;
+  t.className='toast show '+type;
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ── ABOUT ── */
+function openAbout(){g('about-ov').classList.add('open')}
+
+/* ── COUNTS ── */
+function updateCount(){
+  const n=getData().length;
+  ['total-count'].forEach(id=>{const el=g(id);if(el)el.textContent=n;});
+  const t=getTrash().length;
+  ['del-count','del-count2'].forEach(id=>{const el=g(id);if(el)el.textContent=t;});
+  // Show/hide recover button based on whether a reset backup exists
+  const recBtn=g('recover-btn');
+  if(recBtn) recBtn.style.display=localStorage.getItem('irca_last_reset_backup')?'':'none';
+}
+
+/* ── LINEA BUTTONS (form) ── */
+function selectLinea(val,btn){
+  document.querySelectorAll('#r-linea-group .linea-btn').forEach(b=>b.classList.remove('active'));
+  const cur=v('r-linea');
+  if(cur===val){sv('r-linea','');} // deselect if same
+  else{btn.classList.add('active');sv('r-linea',val);}
+}
+function selectLineaEdit(val,btn){
+  document.querySelectorAll('#e-linea-group .linea-btn').forEach(b=>b.classList.remove('active'));
+  const cur=v('e-linea');
+  if(cur===val){sv('e-linea','');}
+  else{btn.classList.add('active');sv('e-linea',val);}
+}
+function setLineaBtns(groupId,hiddenId,val){
+  document.querySelectorAll(`#${groupId} .linea-btn`).forEach(b=>{
+    b.classList.toggle('active', b.textContent===lineaAbbr(val));
+  });
+  sv(hiddenId,val||'');
+}
+function lineaAbbr(val){
+  const map={'BIANCHE L1':'BL1','SCURE L2':'SC2','SCURE L3':'SC3','BIANCHE L4':'BL4'};
+  return map[val]||'';
+}
+
+/* ── LINEA FILTER (search) ── */
+function filterLinea(val,btn){
+  const cur=v('s-linea');
+  document.querySelectorAll('#s-linea-group .linea-btn').forEach(b=>b.classList.remove('active'));
+  if(cur===val){sv('s-linea','');}
+  else{btn.classList.add('active');sv('s-linea',val);}
+  cerca();
+}
+
+/* ── UNIVERSAL PASSWORD ── */
+function askPwd(action){
+  pendingAction=action;
+  const isMaster=(action==='resetAll'||action==='clearTrash');
+  g('pwd-title').innerHTML= isMaster?'&#128274; Password Master':'&#128274; Accesso Richiesto';
+  const descs={
+    export:'Inserisci la password per esportare i dati',
+    import:'Inserisci la password per importare dati',
+    resetAll:'Inserisci la password MASTER per azzerare tutti i dati',
+    clearTrash:'Inserisci la password MASTER per svuotare il cestino',
+    delete:'Inserisci la password per eliminare questa registrazione'
+  };
+  g('pwd-desc').textContent=descs[action]||'Inserisci la password per continuare';
+  g('pwd-err').style.display='none';
+  sv('pwd-in','');
+  g('pwd-ov').classList.add('open');
+  setTimeout(()=>g('pwd-in').focus(),120);
+}
+function closePwd(){g('pwd-ov').classList.remove('open');pendingAction=null;}
+function confirmPwd(){
+  const pwd=g('pwd-in').value;
+  const isMaster=(pendingAction==='resetAll'||pendingAction==='clearTrash'||pendingAction==='restoreRecord'||pendingAction==='recoverLastReset');
+  const required=isMaster?MPWD:DPWD;
+  if(pwd!==required){
+    g('pwd-err').style.display='block';
+    sv('pwd-in','');g('pwd-in').focus();return;
+  }
+  const action=pendingAction;
+  // Close modal FIRST, then execute action (preserves gesture for file input)
+  g('pwd-ov').classList.remove('open');
+  pendingAction=null;
+  g('pwd-err').style.display='none';
+  if(action==='export') doExport();
+  else if(action==='import'){
+    // Must trigger file input click directly after modal close, in same event flush
+    const fi=g('import-file');
+    fi.value='';
+    // Use requestAnimationFrame to fire in the next frame while still considered user-initiated
+    requestAnimationFrame(()=>fi.click());
+  }
+  else if(action==='delete') doDelete();
+  else if(action==='resetAll') doResetAll();
+  else if(action==='clearTrash') doClearTrash();
+  else if(action==='restoreRecord') doRestoreRecord(_pendingRestoreId);
+  else if(action==='recoverLastReset') doRecoverLastReset();
+}
+
+/* ── EDIT PASSWORD ── */
+let _pendingEditId=null;
+function askEditPwd(id){
+  _pendingEditId=id;
+  g('epwd-err').style.display='none';sv('epwd-in','');
+  g('epwd-ov').classList.add('open');
+  setTimeout(()=>g('epwd-in').focus(),120);
+}
+function confirmEditPwd(){
+  if(g('epwd-in').value!==DPWD){
+    g('epwd-err').style.display='block';sv('epwd-in','');g('epwd-in').focus();return;
+  }
+  g('epwd-ov').classList.remove('open');
+  openEdit(_pendingEditId);
+}
+
+/* ── EXPORT ── */
+function doExport(){
+  const d=getData();
+  if(!d.length){toast('Nessun dato da esportare','err');return}
+  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=`irca_finezza_${nowDate().replace(/-/g,'')}.json`;
+  a.click();URL.revokeObjectURL(url);
+  toast(`✓ Esportati ${d.length} record`,'ok');
+}
+
+/* ── IMPORT ── */
+function doImport(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const imported=JSON.parse(e.target.result);
+      if(!Array.isArray(imported))throw new Error();
+      const existing=getData();
+      const ids=new Set(existing.map(r=>r.id));
+      let added=0,skipped=0;
+      imported.forEach(rec=>{
+        if(!rec.lotto||!rec.prodotto){skipped++;return}
+        if(rec.id&&ids.has(rec.id)){skipped++;return}
+        if(!rec.id)rec.id=Date.now()+Math.random();
+        existing.push(rec);ids.add(rec.id);added++;
+      });
+      saveData(existing);updateCount();cerca();
+      toast(`✓ Importati ${added} record (${skipped} ignorati)`,'ok');
+    }catch{toast('Errore: file JSON non valido','err')}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function doRestoreRecord(id){
+  const trash=getTrash();
+  const rec=trash.find(r=>r.id===id);
+  if(!rec)return;
+  const d=getData();
+  const {deletedAt,...clean}=rec;
+  d.push(clean);saveData(d);
+  saveTrash(trash.filter(r=>r.id!==id));
+  updateCount();renderDeleted();
+  toast('✓ Registrazione ripristinata','ok');
+}
+
+/* ── RECOVER LAST RESET ── */
+function recoverLastReset(){
+  const backup=localStorage.getItem('irca_last_reset_backup');
+  if(!backup){toast('Nessun backup di reset trovato','err');return;}
+  // Ask for master password before recovering
+  pendingAction='recoverLastReset';
+  g('pwd-title').innerHTML='&#128274; Password Master';
+  g('pwd-desc').textContent='Inserisci la password MASTER per ripristinare tutti i dati';
+  g('pwd-err').style.display='none';sv('pwd-in','');
+  g('pwd-ov').classList.add('open');
+  setTimeout(()=>g('pwd-in').focus(),120);
+}
+function doRecoverLastReset(){
+  const backup=localStorage.getItem('irca_last_reset_backup');
+  if(!backup){toast('Nessun backup di reset trovato','err');return;}
+  try{
+    const {records, resetAt}=JSON.parse(backup);
+    if(!records||!records.length){toast('Il backup è vuoto','err');return;}
+    const ok=window.confirm(`Ripristinare ${records.length} record eliminati il ${resetAt}?\n\nI dati verranno aggiunti a quelli attuali.`);
+    if(!ok) return;
+    const existing=getData();
+    const ids=new Set(existing.map(r=>r.id));
+    let added=0;
+    records.forEach(r=>{
+      if(!ids.has(r.id)){existing.push(r);ids.add(r.id);added++;}
+    });
+    saveData(existing);
+    localStorage.removeItem('irca_last_reset_backup');
+    updateCount();cerca();
+    const btn=g('recover-btn');
+    if(btn) btn.style.display='none';
+    toast(`✓ ${added} record ripristinati con successo!`,'ok');
+  }catch{toast('Errore nel ripristino del backup','err');}
+}
+function doResetAll(){
+  const d=getData();
+  if(!d.length){toast('Nessun dato da azzerare','info');return;}
+  // Double confirm: type RESET to proceed
+  const confirm1=window.confirm(`⚠️ Sei sicuro di voler azzerare TUTTI i ${d.length} dati?\n\nI dati verranno spostati nel cestino e potranno essere recuperati.`);
+  if(!confirm1) return;
+  const trash=getTrash();
+  const now=nowDate()+' '+nowTime();
+  d.forEach(r=>trash.push({...r, deletedAt:now}));
+  saveTrash(trash);
+  saveData([]);
+  // Create a backup snapshot in localStorage for the "Recover All" button
+  localStorage.setItem('irca_last_reset_backup', JSON.stringify({records:d, resetAt:now}));
+  updateCount();
+  cerca();
+  renderDeleted();
+  toast(`✓ ${d.length} record spostati nel cestino — puoi recuperarli dal Cestino o con "Ripristina Tutto"`, 'info');
+}
+
+/* ── VALIDATION HELPERS ── */
+function clearValidation(){
+  document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
+  document.querySelectorAll('.field-error-msg').forEach(el=>el.remove());
+  const b=g('val-banner');if(b){b.style.display='none';}
+}
+function markFieldError(fieldEl, msg){
+  // fieldEl is the .fg wrapper
+  fieldEl.classList.add('field-error');
+  let errSpan=fieldEl.querySelector('.field-error-msg');
+  if(!errSpan){errSpan=document.createElement('span');errSpan.className='field-error-msg';fieldEl.appendChild(errSpan);}
+  errSpan.textContent='⚠ '+msg;
+}
+function showValBanner(errors){
+  const b=g('val-banner'); const list=g('val-banner-list');
+  if(!b||!list) return;
+  list.innerHTML=errors.map(e=>`<li>${e}</li>`).join('');
+  b.style.display='block';
+  b.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ── SALVA REGISTRAZIONE ── */
+function salvaRegistrazione(){
+  clearValidation();
+  const errors=[];
+
+  // Lotto
+  const lottoEl=g('r-lotto');
+  if(!lottoEl.value.trim()){
+    markFieldError(lottoEl.closest('.fg'),'Il lotto è obbligatorio');
+    errors.push('Lotto');
+  }
+  // Numero Prodotto
+  const prodEl=g('r-prodotto');
+  if(!prodEl.value.trim()){
+    markFieldError(prodEl.closest('.fg'),'Il numero prodotto è obbligatorio');
+    errors.push('Numero Prodotto');
+  }
+  // Descrizione
+  const descEl=g('r-desc');
+  if(!descEl.value.trim()){
+    markFieldError(descEl.closest('.fg'),'La descrizione è obbligatoria');
+    errors.push('Descrizione Prodotto');
+  }
+  // Linea
+  const lineaVal=v('r-linea');
+  if(!lineaVal){
+    const lineaFg=g('r-linea-group').closest('.fg');
+    markFieldError(lineaFg,'Seleziona una linea');
+    errors.push('Linea');
+  }
+  // Nome Operatore (stored in r-note)
+  const noteEl=g('r-note');
+  if(!noteEl.value.trim()){
+    markFieldError(noteEl.closest('.fg'),'Il nome operatore è obbligatorio');
+    errors.push('Nome Operatore');
+  }
+
+  if(errors.length){
+    showValBanner(errors);
+    toast('⚠ Compila tutti i campi obbligatori','err');
+    return;
+  }
+
+  const rec={
+    id:Date.now(),
+    lotto:v('r-lotto'),
+    prodotto:v('r-prodotto'),
+    desc:v('r-desc'),
+    linea:lineaVal,
+    data:v('r-data')||nowDate(),
+    ora:v('r-ora')||nowTime(),
+    at1:{portata:v('r-at1-portata'),potenza:v('r-at1-potenza'),micron:v('r-at1-micron')},
+    at2:{portata:v('r-at2-portata'),potenza:v('r-at2-potenza'),micron:v('r-at2-micron')},
+    note:v('r-note')
+  };
+  const d=getData();d.push(rec);saveData(d);updateCount();
+  toast('✓ Registrazione salvata','ok');
+  resetForm();
+}
+function resetForm(){
+  clearValidation();
+  ['r-lotto','r-prodotto','r-desc','r-note',
+   'r-at1-portata','r-at1-potenza','r-at1-micron',
+   'r-at2-portata','r-at2-potenza','r-at2-micron'].forEach(id=>sv(id,''));
+  sv('r-linea','');
+  document.querySelectorAll('#r-linea-group .linea-btn').forEach(b=>b.classList.remove('active'));
+  sv('r-data',nowDate());sv('r-ora',nowTime());
+}
+
+/* ── EDIT ── */
+function openEdit(id){
+  const r=getData().find(x=>x.id===id);if(!r)return;
+  sv('e-id',r.id);sv('e-lotto',r.lotto);sv('e-prodotto',r.prodotto);
+  sv('e-desc',r.desc||'');sv('e-linea',r.linea||'');
+  // set linea buttons
+  document.querySelectorAll('#e-linea-group .linea-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent===lineaAbbr(r.linea));
+  });
+  sv('e-data',r.data||'');sv('e-ora',r.ora||'');sv('e-note',r.note||'');
+  sv('e-at1-portata',r.at1.portata);sv('e-at1-potenza',r.at1.potenza);sv('e-at1-micron',r.at1.micron);
+  sv('e-at2-portata',r.at2.portata);sv('e-at2-potenza',r.at2.potenza);sv('e-at2-micron',r.at2.micron);
+  g('edit-ov').classList.add('open');
+}
+function closeEdit(){
+  g('edit-ov').classList.remove('open');
+  document.querySelectorAll('#edit-ov .field-error').forEach(el=>el.classList.remove('field-error'));
+  document.querySelectorAll('#edit-ov .field-error-msg').forEach(el=>el.remove());
+  const eb=g('eval-banner');if(eb)eb.style.display='none';
+}
+
+/* ── COPY RECORD ── */
+function copyRecord(id){
+  const r=getData().find(x=>x.id===id);if(!r)return;
+  // Navigate to the registration page first
+  const navBtn=g('nav-registra');
+  showPage('registra', navBtn);
+  // Clear form then pre-fill with copied data (skip portata, potenza, nome operatore)
+  resetForm();
+  sv('r-lotto', r.lotto||'');
+  sv('r-prodotto', r.prodotto||'');
+  sv('r-desc', r.desc||'');
+  // Set linea button
+  if(r.linea){
+    sv('r-linea', r.linea);
+    document.querySelectorAll('#r-linea-group .linea-btn').forEach(b=>{
+      b.classList.toggle('active', b.textContent===lineaAbbr(r.linea));
+    });
+  }
+  // micron left empty for new measurement
+  sv('r-at1-micron', '');
+  sv('r-at2-micron', '');
+  // Fresh date/time for the new record
+  sv('r-data', nowDate());
+  sv('r-ora', nowTime());
+  // Scroll to top and highlight the form
+  window.scrollTo({top:0, behavior:'smooth'});
+  toast('&#128203; Dati copiati — completa Portata, Potenza e Nome Operatore', 'info');
+}
+function salvaModifica(){
+  // Clear previous edit validation
+  document.querySelectorAll('#edit-ov .field-error').forEach(el=>el.classList.remove('field-error'));
+  document.querySelectorAll('#edit-ov .field-error-msg').forEach(el=>el.remove());
+  const eb=g('eval-banner');const el2=g('eval-banner-list');
+  if(eb) eb.style.display='none';
+
+  const id=parseInt(v('e-id'));
+  const errors=[];
+
+  const lottoEl=g('e-lotto');
+  if(!lottoEl.value.trim()){markFieldError(lottoEl.closest('.fg'),'Il lotto è obbligatorio');errors.push('Lotto');}
+
+  const prodEl=g('e-prodotto');
+  if(!prodEl.value.trim()){markFieldError(prodEl.closest('.fg'),'Il numero prodotto è obbligatorio');errors.push('Numero Prodotto');}
+
+  const descEl=g('e-desc');
+  if(!descEl.value.trim()){markFieldError(descEl.closest('.fg'),'La descrizione è obbligatoria');errors.push('Descrizione');}
+
+  const lineaVal=v('e-linea');
+  if(!lineaVal){
+    const lineaFg=g('e-linea-group').closest('.fg');
+    markFieldError(lineaFg,'Seleziona una linea');errors.push('Linea');
+  }
+
+  const noteEl=g('e-note');
+  if(!noteEl.value.trim()){markFieldError(noteEl.closest('.fg'),'Il nome operatore è obbligatorio');errors.push('Nome Operatore');}
+
+  if(errors.length){
+    if(eb&&el2){el2.innerHTML=errors.map(e=>`<li>${e}</li>`).join('');eb.style.display='block';}
+    toast('⚠ Compila tutti i campi obbligatori','err');
+    return;
+  }
+
+  const d=getData();const i=d.findIndex(x=>x.id===id);if(i<0)return;
+  d[i]={...d[i],lotto:v('e-lotto'),prodotto:v('e-prodotto'),desc:v('e-desc'),linea:lineaVal,
+    data:v('e-data'),ora:v('e-ora'),note:v('e-note'),
+    at1:{portata:v('e-at1-portata'),potenza:v('e-at1-potenza'),micron:v('e-at1-micron')},
+    at2:{portata:v('e-at2-portata'),potenza:v('e-at2-potenza'),micron:v('e-at2-micron')}};
+  saveData(d);closeEdit();toast('✓ Modifiche salvate','ok');updateCount();cerca();
+}
+
+/* ── DELETE ── */
+let _pendingDelId=null;
+function askDel(id,e){
+  e.stopPropagation();_pendingDelId=id;pendingAction='delete';
+  g('pwd-title').innerHTML='&#128274; Elimina Registrazione';
+  g('pwd-desc').textContent='Inserisci la password per eliminare';
+  g('pwd-err').style.display='none';sv('pwd-in','');
+  g('pwd-ov').classList.add('open');setTimeout(()=>g('pwd-in').focus(),120);
+}
+function doDelete(){
+  const d=getData();
+  const rec=d.find(r=>r.id===_pendingDelId);
+  if(rec){
+    const trash=getTrash();
+    trash.push({...rec,deletedAt:nowDate()+' '+nowTime()});
+    saveTrash(trash);
+    saveData(d.filter(r=>r.id!==_pendingDelId));
+  }
+  _pendingDelId=null;toast('Registrazione eliminata','ok');updateCount();cerca();
+}
+
+/* ── RESTORE ── */
+function restoreRecord(id){
+  pendingAction='restoreRecord';
+  _pendingRestoreId=id;
+  g('pwd-title').innerHTML='&#128274; Password Master';
+  g('pwd-desc').textContent='Inserisci la password MASTER per ripristinare';
+  g('pwd-err').style.display='none';sv('pwd-in','');
+  g('pwd-ov').classList.add('open');
+  setTimeout(()=>g('pwd-in').focus(),120);
+}
+function doClearTrash(){saveTrash([]);updateCount();renderDeleted();toast('Cestino svuotato','ok')}
+
+/* ── AVG ── */
+function avg(arr){const n=arr.map(x=>parseFloat(x)).filter(x=>!isNaN(x));return n.length?(n.reduce((a,b)=>a+b,0)/n.length):null}
+function fmt(v,u=''){if(v===null)return'—';return(Number.isInteger(v)?v:parseFloat(v.toFixed(1)))+u}
+
+/* ── STATS ── */
+function showProdPanel(prod){
+  const all=getData().filter(r=>r.prodotto===prod);
+  g('pp-title').textContent=`Prodotto N° ${prod}  —  ${all.length} rilevazioni`;
+  g('st-n').textContent=all.length;
+  g('st-m1').textContent=fmt(avg(all.map(r=>r.at1.micron)),' μm');
+  g('st-m2').textContent=fmt(avg(all.map(r=>r.at2.micron)),' μm');
+  g('st-p').textContent=fmt(avg(all.map(r=>r.at1.portata)));
+  g('prod-panel').classList.add('open');
+}
+function hideProdPanel(){g('prod-panel').classList.remove('open')}
+
+/* ── CERCA ── */
+function cerca(){
+  const sp=v('s-prodotto').toLowerCase().trim();
+  const sl=v('s-lotto').toLowerCase().trim();
+  const slinea=v('s-linea'),sdal=v('s-dal'),sal=v('s-al');
+  let res=getData();
+  if(sp)res=res.filter(r=>r.prodotto.toLowerCase().includes(sp)||(r.desc||'').toLowerCase().includes(sp));
+  if(sl)res=res.filter(r=>r.lotto.toLowerCase().includes(sl));
+  if(slinea)res=res.filter(r=>r.linea===slinea);
+  if(sdal)res=res.filter(r=>r.data>=sdal);
+  if(sal)res=res.filter(r=>r.data<=sal);
+  res.sort((a,b)=>(b.data+b.ora).localeCompare(a.data+a.ora));
+  renderTable(res);
+  if(sp&&res.length>0){
+    const pm={};res.forEach(r=>{pm[r.prodotto]=(pm[r.prodotto]||0)+1});
+    const top=Object.entries(pm).sort((a,b)=>b[1]-a[1])[0][0];
+    showProdPanel(top);
+  }else hideProdPanel();
+}
+function resetCerca(){
+  ['s-prodotto','s-lotto','s-dal','s-al'].forEach(id=>sv(id,''));
+  sv('s-linea','');
+  document.querySelectorAll('#s-linea-group .linea-btn').forEach(b=>b.classList.remove('active'));
+  hideProdPanel();cerca();
+}
+
+/* ── BADGE ── */
+function lbadge(l){
+  if(!l)return'<span style="color:#aaa">—</span>';
+  const abbr=lineaAbbr(l)||l;
+  return`<span class="badge ${l.startsWith('BIANCHE')?'b-wh':'b-dk'}" title="${esc(l)}">${abbr}</span>`;
+}
+
+/* ── RENDER MAIN TABLE ── */
+function renderTable(res){
+  const wrap=g('results-wrap');
+  if(!res.length){
+    const total=getData().length;
+    wrap.innerHTML=total===0
+      ?'<div class="empty">Nessuna registrazione. Vai su <strong>+ Registrazione</strong> per iniziare.</div>'
+      :'<div class="empty">Nessun risultato con i filtri attuali.</div>';
+    return;
+  }
+  const rows=res.map(r=>`
+    <tr onclick="showProdPanel('${esc(r.prodotto)}')">
+      <td style="font-weight:700;color:var(--lime-dark);white-space:nowrap">${esc(r.lotto)}</td>
+      <td style="font-family:monospace;font-size:11px;color:#444;white-space:nowrap">${esc(r.prodotto)}</td>
+      <td style="font-size:11px;min-width:180px">${esc(r.desc||'—')}</td>
+      <td>${lbadge(r.linea)}</td>
+      <td style="white-space:nowrap;font-size:11px">${r.data||'—'}<br><span style="color:#999">${r.ora||''}</span></td>
+      <td style="text-align:center;font-weight:700;color:var(--col-portata)">${r.at1.portata||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-potenza)">${r.at1.potenza!==''&&r.at1.potenza!==undefined?r.at1.potenza:'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-micron)">${r.at1.micron?(r.at1.micron+' μm'):'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-portata)">${r.at2.portata||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-potenza)">${r.at2.potenza!==''&&r.at2.potenza!==undefined?r.at2.potenza:'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-micron2)">${r.at2.micron?(r.at2.micron+' μm'):'—'}</td>
+      <td style="font-size:11px;color:#555">${esc(r.note||'—')}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="act-btns">
+          <button class="eb" onclick="askEditPwd(${r.id})" title="Modifica">&#9998;</button>
+          <button class="cb" onclick="copyRecord(${r.id})" title="Copia — nuova registrazione con questi dati">&#128203;</button>
+          <button class="db" onclick="askDel(${r.id},event)" title="Elimina">&#128465;</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  wrap.innerHTML=`
+    <div class="tbl-outer">
+      <table>
+        <thead><tr>
+          <th>Lotto</th>
+          <th>N° Prodotto</th>
+          <th>Descrizione</th>
+          <th>Linea</th>
+          <th>Data / Ora</th>
+          <th class="th-portata">AT1<br>Portata<br><small style="font-weight:400;text-transform:none;opacity:0.8">[kg/h]</small></th>
+          <th class="th-potenza">AT1<br>Potenza<br><small style="font-weight:400;text-transform:none;opacity:0.8">[%]</small></th>
+          <th class="th-micron">AT1<br>Micron<br><small style="font-weight:400;text-transform:none;opacity:0.8">[μm]</small></th>
+          <th class="th-portata">AT2<br>Portata<br><small style="font-weight:400;text-transform:none;opacity:0.8">[kg/h]</small></th>
+          <th class="th-potenza">AT2<br>Potenza<br><small style="font-weight:400;text-transform:none;opacity:0.8">[%]</small></th>
+          <th class="th-micron">AT2<br>Micron<br><small style="font-weight:400;text-transform:none;opacity:0.8">[μm]</small></th>
+          <th>Nome Op.</th>
+          <th>Azioni</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="padding:6px 10px;font-size:11px;color:var(--muted);text-align:right;background:#f8f8f5;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px">
+      ${res.length} record
+    </div>`;
+}
+
+/* ── RENDER DELETED TABLE ── */
+function renderDeleted(){
+  updateCount();
+  const trash=getTrash();
+  const wrap=g('deleted-wrap');
+  if(!trash.length){wrap.innerHTML='<div class="empty">Nessun dato eliminato.</div>';return}
+  const rows=trash.slice().reverse().map(r=>`
+    <tr>
+      <td style="font-size:10px;color:#999;white-space:nowrap">${r.deletedAt||'—'}</td>
+      <td style="font-weight:700;color:var(--lime-dark);white-space:nowrap">${esc(r.lotto)}</td>
+      <td style="font-family:monospace;font-size:11px;color:#444">${esc(r.prodotto)}</td>
+      <td style="font-size:11px">${esc(r.desc||'—')}</td>
+      <td>${lbadge(r.linea)}</td>
+      <td style="font-size:11px;white-space:nowrap">${r.data||'—'} ${r.ora||''}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-portata)">${r.at1?.portata||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-potenza)">${r.at1?.potenza!==''&&r.at1?.potenza!==undefined?r.at1.potenza:'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-micron)">${r.at1?.micron?r.at1.micron+' μm':'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-portata)">${r.at2?.portata||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-potenza)">${r.at2?.potenza!==''&&r.at2?.potenza!==undefined?r.at2.potenza:'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--col-micron2)">${r.at2?.micron?r.at2.micron+' μm':'—'}</td>
+      <td style="font-size:11px;color:#555">${esc(r.note||'—')}</td>
+      <td>
+        <button class="btn btn-green btn-sm" onclick="restoreRecord(${r.id})" title="Ripristina">&#8617; Ripristina</button>
+      </td>
+    </tr>`).join('');
+  wrap.innerHTML=`
+    <div class="tbl-outer">
+      <table>
+        <thead><tr>
+          <th>Eliminato il</th><th>Lotto</th><th>N° Prodotto</th><th>Descrizione</th><th>Linea</th><th>Data / Ora</th>
+          <th class="th-portata">AT1 Portata</th><th class="th-potenza">AT1 Pot.</th><th class="th-micron">AT1 Mic.</th>
+          <th class="th-portata">AT2 Portata</th><th class="th-potenza">AT2 Pot.</th><th class="th-micron">AT2 Mic.</th>
+          <th>Nome Op.</th><th>Azioni</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="padding:6px 10px;font-size:11px;color:var(--muted);text-align:right;background:#fff0f0;border:1px solid #ecc;border-top:none;border-radius:0 0 4px 4px">
+      ${trash.length} record nel cestino
+    </div>`;
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initClock();updateCount();
+  g('edit-ov').addEventListener('click',e=>{if(e.target===g('edit-ov'))closeEdit()});
+  g('pwd-ov').addEventListener('click',e=>{if(e.target===g('pwd-ov'))closePwd()});
+  g('epwd-ov').addEventListener('click',e=>{if(e.target===g('epwd-ov'))g('epwd-ov').classList.remove('open')});
+  g('about-ov').addEventListener('click',e=>{if(e.target===g('about-ov'))g('about-ov').classList.remove('open')});
+});
+</script>
+</body>
+</html>
