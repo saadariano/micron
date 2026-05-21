@@ -68,6 +68,192 @@ nav a.active{color:#222;border-bottom-color:var(--lime-dark);background:rgba(90,
 .hdr-badge{background:#888;color:#fff;padding:4px 10px;border-radius:3px;font-size:11px;font-weight:600}
 .hdr-badge.red{background:var(--irca-red);color:#fff}
 
+/* ── DONE-EARLY POPUP (from green lotto button) ── */
+function openDoneEarlyPopup(key, rem, anchorBtn){
+  const popup = g('done-early-popup');
+  const content = g('dep-content');
+  if(!popup||!content) return;
+
+  // Find the card for doneAt time
+  const card = document.getElementById('rc-' + key);
+  const doneAt = card ? card._doneAt : '—';
+
+  const lotto = rem ? rem.lotto : key.split('__')[0];
+  const prodotto = rem ? rem.prodotto : key.split('__')[1];
+  const descTxt = rem && rem.desc ? `<div class="dep-row"><span class="dep-lbl">Descrizione</span><span class="dep-val" style="font-size:11px">${esc(rem.desc)}</span></div>` : '';
+  const lineaLbl = rem ? lineaShortLabel(rem.linea) : '?';
+
+  // Scheduled time
+  const schedHHMM = rem && rem.fireAt ? (()=>{ const d=new Date(rem.fireAt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); })() : '—';
+
+  content.innerHTML = `
+    <div class="dep-row"><span class="dep-lbl">Linea</span><span class="dep-val" style="color:#3d7010;font-size:15px;font-weight:800">${esc(lineaLbl)}</span></div>
+    <div class="dep-row"><span class="dep-lbl">Lotto</span><span class="dep-val" style="font-size:13px">${esc(lotto)}</span></div>
+    <div class="dep-row"><span class="dep-lbl">N° Prodotto</span><span class="dep-val">${esc(prodotto)}</span></div>
+    ${descTxt}
+    <div style="background:#edf7e0;border:1px solid #a8d880;border-radius:4px;padding:7px 10px;margin-top:6px;font-size:11px;">
+      <div style="color:#3d7010;font-weight:700;">✓ Test eseguito alle <strong>${doneAt}</strong></div>
+      <div style="color:#888;margin-top:2px;">Promemoria previsto per le ${schedHHMM}</div>
+    </div>
+    <button class="dep-fatto-btn" onclick="closeDoneEarlyAndDismiss('${key}')">✓ Fatto — Rimuovi notifica</button>
+  `;
+
+  // Position near anchor
+  if(anchorBtn){
+    const rect = anchorBtn.getBoundingClientRect();
+    popup.style.top = (rect.bottom + 8) + 'px';
+    let left = rect.left;
+    const pw = 320;
+    if(left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+    if(left < 8) left = 8;
+    popup.style.left = left + 'px';
+  } else {
+    popup.style.top = '80px'; popup.style.right = '10px'; popup.style.left = 'auto';
+  }
+  popup.classList.add('open');
+}
+
+function closeDoneEarlyPopup(){
+  const popup = g('done-early-popup');
+  if(popup) popup.classList.remove('open');
+}
+
+function closeDoneEarlyAndDismiss(key){
+  closeDoneEarlyPopup();
+  closeDoneEarlyCard(key);
+}
+
+// Close done-early popup on outside click
+document.addEventListener('click', function(e){
+  const popup = g('done-early-popup');
+  if(popup && popup.classList.contains('open')){
+    if(!popup.contains(e.target) && !e.target.closest('.lotto-alert-btn.done-early')){
+      closeDoneEarlyPopup();
+    }
+  }
+});
+
+/* ── ATTESA PANEL ── */
+function toggleAttesaPanel(e){
+  e.stopPropagation();
+  const panel = g('attesa-panel');
+  if(!panel) return;
+  if(panel.classList.contains('open')){ closeAttesaPanel(); return; }
+  renderAttesaList();
+  panel.classList.add('open');
+}
+
+function closeAttesaPanel(){
+  const panel = g('attesa-panel');
+  if(panel) panel.classList.remove('open');
+}
+
+document.addEventListener('click', function(e){
+  const panel = g('attesa-panel');
+  if(panel && panel.classList.contains('open')){
+    if(!panel.contains(e.target) && !e.target.closest('#hdr-attesa-btn')){
+      closeAttesaPanel();
+    }
+  }
+});
+
+function renderAttesaList(){
+  const list = g('attesa-list');
+  if(!list) return;
+  const reminders = getReminders();
+  const now = Date.now();
+  // Only pending (not dismissed, not yet fired)
+  const pending = reminders.filter(r => !r.dismissed && now < r.fireAt);
+  // Group by lotto+prodotto
+  const groups = {};
+  pending.forEach(r => {
+    const key = r.lotto + '__' + r.prodotto;
+    if(!groups[key]) groups[key] = { rem: r, rems: [] };
+    groups[key].rems.push(r);
+  });
+  const keys = Object.keys(groups);
+  if(!keys.length){
+    list.innerHTML = '<div class="ap-empty">Nessun test in attesa</div>';
+    return;
+  }
+  // Sort by earliest fireAt
+  keys.sort((a,b) => groups[a].rem.fireAt - groups[b].rem.fireAt);
+
+  list.innerHTML = keys.map(key => {
+    const { rem, rems } = groups[key];
+    const fireDate = new Date(rem.fireAt);
+    const hhmm = String(fireDate.getHours()).padStart(2,'0')+':'+String(fireDate.getMinutes()).padStart(2,'0');
+    const minsLeft = Math.round((rem.fireAt - now)/60000);
+    const timeStr = minsLeft >= 60 ? Math.floor(minsLeft/60)+'h '+String(minsLeft%60).padStart(2,'0')+'m' : minsLeft+'min';
+    const isLate = minsLeft < 0;
+    const lineaLbl = lineaShortLabel(rem.linea);
+    const isScure = rem.linea && rem.linea.startsWith('SCURE');
+    const misure = rems.map(r => r.measurement===2 ? '2ª' : '3ª').join('+');
+    return `<div class="ap-row">
+      <div class="ap-linea${isScure?' scure':''}">${esc(lineaLbl)}</div>
+      <div class="ap-info">
+        <div class="ap-lotto">${esc(rem.lotto)}</div>
+        <div class="ap-prod">${esc(rem.prodotto)}${rem.desc ? ' — '+rem.desc.substring(0,30) : ''} · ${misure} mis.</div>
+      </div>
+      <div>
+        <div class="ap-time${isLate?' late':''}">${hhmm}</div>
+        <div class="ap-time-sub">${isLate ? '⚠ in ritardo' : 'tra ' + timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateAttesaBtn(){
+  const btn = g('hdr-attesa-btn');
+  const countEl = g('attesa-count');
+  if(!btn||!countEl) return;
+  const reminders = getReminders();
+  const now = Date.now();
+  const pending = reminders.filter(r => !r.dismissed && now < r.fireAt);
+  // Group by lotto+prodotto
+  const keys = new Set(pending.map(r => r.lotto+'__'+r.prodotto));
+  const n = keys.size;
+  if(n > 0){
+    btn.classList.add('visible');
+    countEl.textContent = n;
+  } else {
+    btn.classList.remove('visible');
+    countEl.textContent = '0';
+    closeAttesaPanel();
+  }
+}
+
+/* ── STATO BADGE ── */
+.stato-badge{
+  padding:5px 12px;border-radius:4px;font-size:11px;font-weight:800;
+  cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;
+  border:2px solid transparent;transition:all 0.3s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.stato-idle{background:#888;color:#fff;border-color:#666;}
+.stato-idle:hover{background:#666;}
+.stato-pending{background:#e07820;color:#fff;border-color:#b05e10;animation:statoPulse 2s infinite;}
+.stato-alert{background:#cc1111;color:#fff;border-color:#990d0d;animation:statoPulse 1.2s infinite;}
+.stato-done{background:#5a9a20;color:#fff;border-color:#3d7010;}
+.stato-done:hover{background:#3d7010;}
+@keyframes statoPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(224,120,32,0.5)}
+  50%{box-shadow:0 0 0 6px rgba(224,120,32,0)}
+}
+/* Green "done early" lotto button */
+.lotto-alert-btn.done-early{
+  background:#edf7e0;border-color:#5a9a20;color:#3d7010;
+  animation:none;
+}
+.lotto-alert-btn.done-early .lotto-pulse{background:#5a9a20;animation:none;}
+.lotto-alert-btn.done-early:hover{background:#c8edaa;border-color:#3d7010;}
+/* Done-early reminder card */
+.reminder-card.card-done{
+  background:#edf7e0;border-color:#a8d880;border-left-color:#5a9a20;
+}
+.reminder-card.card-done .rc-title{color:#3d7010;}
+.reminder-card.card-done .rc-msg{color:#3d7010;}
+
 /* TOOLBAR */
 .toolbar{background:#f5f2d0;padding:3px 1rem;display:flex;align-items:center;gap:10px;font-size:11px;color:#777;border-bottom:1px solid #d4c84a;position:sticky;top:62px;z-index:290}
 .clock{font-weight:700;color:#333;font-size:12px;letter-spacing:0.5px}
@@ -385,6 +571,32 @@ nav a.active{color:#222;border-bottom-color:var(--lime-dark);background:rgba(90,
 .lap-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px;line-height:1.5}
 .lap-lbl{font-weight:700;color:#888;min-width:80px;flex-shrink:0}
 .lap-val{color:#222;font-weight:600}
+/* Popup timer / late countdown */
+.lap-time-row{display:flex;align-items:center;gap:6px;margin-top:6px;margin-bottom:2px;font-size:11px;padding:5px 8px;border-radius:4px;}
+.lap-time-row.on-time{background:#e8f4ff;color:#1a6abf;}
+.lap-time-row.late{background:#fff0f0;color:#cc1111;font-weight:700;}
+.lap-countdown{font-size:13px;font-weight:800;letter-spacing:0.5px;}
+/* MISURA button in popup */
+.lap-misura-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin-top:10px;padding:9px 0;
+  background:#1a6abf;color:#fff;
+  border:none;border-radius:5px;
+  font-size:13px;font-weight:800;letter-spacing:0.5px;
+  cursor:pointer;transition:background 0.15s;
+}
+.lap-misura-btn:hover{background:#134f8f;}
+.lap-misura-btn:active{transform:scale(0.98);}
+/* FATTO (done early) button */
+.lap-done-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin-top:10px;padding:9px 0;
+  background:#5a9a20;color:#fff;
+  border:none;border-radius:5px;
+  font-size:13px;font-weight:800;letter-spacing:0.5px;
+  cursor:pointer;transition:background 0.15s;
+}
+.lap-done-btn:hover{background:#3d7010;}
 /* iPhone-style notification count badge */
 .lotto-count-badge{
   display:inline-flex;align-items:center;justify-content:center;
@@ -436,6 +648,78 @@ body:not(.select-mode) .chk-col-th{display:none}
 #page-ricerca.active{display:block}
 #ricerca-sticky{padding:0}
 #ricerca-scroll{padding:0}
+
+/* ── ATTESA PANEL (dropdown from header button) ── */
+#attesa-panel{
+  position:fixed;top:62px;right:0;z-index:8500;
+  background:#fff;border:2px solid #1a6abf;border-top:none;
+  border-radius:0 0 8px 8px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.22);
+  width:360px;max-width:96vw;
+  max-height:70vh;overflow-y:auto;
+  display:none;
+  animation:popupFadeIn 0.2s ease;
+}
+#attesa-panel.open{display:block;}
+.ap-hd{background:#1a6abf;color:#fff;padding:10px 14px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
+.ap-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;padding:0;}
+.ap-row{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid #e8f0fb;transition:background 0.1s;}
+.ap-row:last-child{border-bottom:none;}
+.ap-row:hover{background:#f0f6ff;}
+.ap-linea{width:34px;height:34px;border-radius:4px;background:#1a6abf;color:#fff;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ap-linea.scure{background:#8b4513;}
+.ap-info{flex:1;min-width:0;}
+.ap-lotto{font-size:12px;font-weight:700;color:#1a2035;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ap-prod{font-size:10px;color:#888;margin-top:1px;}
+.ap-time{font-size:11px;font-weight:800;color:#1a6abf;white-space:nowrap;flex-shrink:0;text-align:right;}
+.ap-time.late{color:#cc1111;}
+.ap-time-sub{font-size:9px;color:#aaa;margin-top:1px;text-align:right;}
+.ap-empty{padding:20px;text-align:center;color:#aaa;font-size:12px;}
+/* Header attesa button */
+.hdr-attesa-btn{
+  height:28px;padding:0 10px;border-radius:3px;
+  border:2px solid #1a6abf;background:#e8f0fb;color:#1a6abf;
+  font-size:11px;font-weight:800;cursor:pointer;
+  display:none;align-items:center;gap:4px;white-space:nowrap;
+  transition:all 0.15s;letter-spacing:0.3px;
+}
+.hdr-attesa-btn.visible{display:inline-flex;}
+.hdr-attesa-btn:hover{background:#1a6abf;color:#fff;}
+.hdr-attesa-btn .attesa-count{
+  background:#1a6abf;color:#fff;border-radius:8px;
+  padding:0 5px;font-size:10px;font-weight:800;min-width:16px;text-align:center;
+  transition:background 0.15s;
+}
+.hdr-attesa-btn:hover .attesa-count{background:#fff;color:#1a6abf;}
+
+/* ── DONE-EARLY POPUP (opened from green lotto button) ── */
+#done-early-popup{
+  position:fixed;z-index:9100;
+  background:#fff;border:2px solid #5a9a20;
+  border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+  padding:1.1rem 1.3rem;min-width:260px;max-width:320px;
+  display:none;
+}
+#done-early-popup.open{display:block;animation:popupFadeIn 0.2s ease;}
+.dep-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;}
+.dep-title{font-size:13px;font-weight:800;color:#3d7010;text-transform:uppercase;letter-spacing:0.4px;}
+.dep-close{background:none;border:none;cursor:pointer;color:#aaa;font-size:20px;line-height:1;padding:0;}
+.dep-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px;line-height:1.5;}
+.dep-lbl{font-weight:700;color:#888;min-width:80px;flex-shrink:0;}
+.dep-val{color:#222;font-weight:600;}
+.dep-fatto-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin-top:10px;padding:9px 0;
+  background:#5a9a20;color:#fff;
+  border:none;border-radius:5px;
+  font-size:13px;font-weight:800;letter-spacing:0.5px;
+  cursor:pointer;transition:background 0.15s;
+}
+.dep-fatto-btn:hover{background:#3d7010;}
 </style>
 </head>
 <body>
@@ -462,7 +746,10 @@ body:not(.select-mode) .chk-col-th{display:none}
   <div class="hdr-right">
     <!-- LOTTO REMINDER BUTTONS (between title and REPARTO CREME) -->
     <div id="lotto-alert-bar" style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"></div>
-    <span class="hdr-badge red">REPARTO CREME</span>
+    <button id="hdr-attesa-btn" class="hdr-attesa-btn" onclick="toggleAttesaPanel(event)" title="Lotti in attesa di test">
+      ⏱ ATTESA <span class="attesa-count" id="attesa-count">0</span>
+    </button>
+    <span id="stato-badge" class="stato-badge stato-idle" onclick="onStatoBadgeClick()" title="Stato test micron">🏭 CREME</span>
   </div>
 </header>
 <div class="toolbar">
@@ -857,6 +1144,24 @@ body:not(.select-mode) .chk-col-th{display:none}
     <button class="lap-close" onclick="closeLottoPopup()">&#215;</button>
   </div>
   <div id="lap-content"></div>
+</div>
+
+<!-- ATTESA PANEL -->
+<div id="attesa-panel">
+  <div class="ap-hd">
+    <span>⏱ In Attesa — Test Micron</span>
+    <button class="ap-close" onclick="closeAttesaPanel()">×</button>
+  </div>
+  <div id="attesa-list"></div>
+</div>
+
+<!-- DONE-EARLY POPUP -->
+<div id="done-early-popup">
+  <div class="dep-hd">
+    <span class="dep-title">✓ Test Eseguito</span>
+    <button class="dep-close" onclick="closeDoneEarlyPopup()">×</button>
+  </div>
+  <div id="dep-content"></div>
 </div>
 
 <!-- PROMEMORIA MICRON MODAL -->
@@ -1900,7 +2205,7 @@ function saveReminders(d){ localStorage.setItem(REMINDER_KEY, JSON.stringify(d))
 function openPromemoria(){
   g('prom-ov').classList.add('open');
   updatePromIndicator();
-  setTimeout(()=>{ const s=g('r-prom2'); if(s) s.focus(); },150);
+  setTimeout(()=>g('r-prom2').focus(),150);
 }
 function closeProm(){ g('prom-ov').classList.remove('open'); }
 function clearProm(){
@@ -1999,6 +2304,7 @@ function scheduleReminderByTime(rec, mins2, mins3){
       linea: rec.linea||'',
       measurement: 2,
       fireAt: now + parseInt(mins2)*60000,
+      scheduledAt: now,
       durationLabel: durationLabel(mins2),
       dismissed: false
     });
@@ -2012,32 +2318,123 @@ function scheduleReminderByTime(rec, mins2, mins3){
       linea: rec.linea||'',
       measurement: 3,
       fireAt: now + parseInt(mins3)*60000,
+      scheduledAt: now,
       durationLabel: durationLabel(mins3),
       dismissed: false
     });
   }
   saveReminders(reminders);
+  updateStatoBadge();
+  updateAttesaBtn();
 }
 
 /* ── DISMISS when a new registration saves for same lotto ── */
 function dismissReminderForRecord(lotto, prodotto){
   const reminders = getReminders();
   let changed = false;
+  let earlyDismiss = false; // true = test done BEFORE timer fired
   reminders.forEach(r=>{
     if(r.lotto===lotto && r.prodotto===prodotto && !r.dismissed){
+      if(Date.now() < r.fireAt) earlyDismiss = true; // timer not yet fired
       r.dismissed=true; changed=true;
     }
   });
   if(changed){
     saveReminders(reminders);
-    // Remove the button for this lotto from the header bar
     const key = lotto + '__' + prodotto;
-    const btn = document.getElementById('lbtn-' + key);
-    if(btn){
-      btn.style.opacity='0';btn.style.transform='scale(0.7)';btn.style.transition='all 0.3s';
-      setTimeout(()=>{ btn.remove(); updateLottoAlertBadge(); checkReminders(); }, 300);
+
+    if(earlyDismiss){
+      // Test was done BEFORE the reminder fired → show "done" green state
+      // Find the reminder object to pass linea info
+      const remObj = reminders.find(r => r.lotto===lotto && r.prodotto===prodotto) || {lotto, prodotto, linea:''};
+      showDoneEarlyCard(key, lotto, prodotto, remObj);
+      markLottoBtnDone(key, remObj);
+    } else {
+      // Test done after reminder fired → just remove everything
+      const btn = document.getElementById('lbtn-' + key);
+      if(btn){
+        btn.style.opacity='0';btn.style.transform='scale(0.7)';btn.style.transition='all 0.3s';
+        setTimeout(()=>{ btn.remove(); updateLottoAlertBadge(); checkReminders(); updateStatoBadge(); }, 300);
+      }
+      // Also remove any floating card for this key
+      const card = document.getElementById('rc-' + key);
+      if(card) dismissReminderCard(key);
     }
     closeLottoPopup();
+    updateStatoBadge();
+  }
+}
+
+/* Show a green "test already done" floating card */
+function showDoneEarlyCard(key, lotto, prodotto, rem){
+  const stack = g('reminder-stack');
+  if(!stack) return;
+  const existing = document.getElementById('rc-' + key);
+  if(existing) existing.remove();
+
+  const doneAt = new Date();
+  const doneStr = String(doneAt.getHours()).padStart(2,'0')+':'+String(doneAt.getMinutes()).padStart(2,'0');
+  const lineaLbl = rem ? lineaShortLabel(rem.linea) : '';
+
+  const card = document.createElement('div');
+  card.className = 'reminder-card card-done';
+  card.id = 'rc-' + key;
+  card._doneAt = doneStr;
+  card._rem = rem;
+  const lineaDisplayCard = rem && rem.linea ? `${esc(lineaLbl)} — ${esc(rem.linea)}` : (lineaLbl !== '—' ? esc(lineaLbl) : '');
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="rc-title">✓ Test Eseguito</span>
+      <button onclick="closeDoneEarlyCard('${key}')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;line-height:1;padding:0 2px" title="Chiudi">×</button>
+    </div>
+    ${lineaDisplayCard ? `<div class="rc-linea">${lineaDisplayCard}</div>` : ''}
+    <div class="rc-prod" style="color:#3d7010">Lotto: ${esc(lotto)}</div>
+    <div class="rc-msg" style="color:#3d7010">✓ Registrato alle ${doneStr}</div>
+  `;
+  stack.appendChild(card);
+  // Auto-remove after 12 seconds
+  card._autoTimer = setTimeout(()=>{
+    const el = document.getElementById('rc-' + key);
+    if(el){ el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='all 0.4s'; setTimeout(()=>el.remove(),400); }
+  }, 12000);
+}
+
+/* Close the done-early card AND remove the green lotto button */
+function closeDoneEarlyCard(key){
+  const card = document.getElementById('rc-' + key);
+  if(card){
+    if(card._autoTimer) clearTimeout(card._autoTimer);
+    card.style.opacity='0'; card.style.transform='translateX(40px)'; card.style.transition='all 0.3s';
+    setTimeout(()=>card.remove(), 300);
+  }
+  // Also remove the green lotto button
+  const btn = document.getElementById('lbtn-' + key);
+  if(btn){
+    btn.style.opacity='0'; btn.style.transform='scale(0.7)'; btn.style.transition='all 0.3s';
+    setTimeout(()=>{ btn.remove(); updateLottoAlertBadge(); updateStatoBadge(); }, 300);
+  }
+}
+
+/* Turn a header lotto button green (done early) — CREATE it if not existing */
+function markLottoBtnDone(key, rem){
+  const bar = getLottoAlertBar();
+  if(!bar) return;
+  let btn = document.getElementById('lbtn-' + key);
+  if(!btn){
+    // Button doesn't exist yet (timer hadn't fired) — create it green from scratch
+    btn = document.createElement('button');
+    btn.id = 'lbtn-' + key;
+    btn.className = 'lotto-alert-btn done-early';
+    const lineaLabel = (rem && rem.linea) ? lineaShortLabel(rem.linea) : key.split('__')[0].substring(0,6);
+    btn.innerHTML = '<span class="lotto-pulse"></span>' + lineaLabel;
+    btn.title = 'Test eseguito — clicca per dettagli';
+    btn.onclick = function(e){ e.stopPropagation(); openDoneEarlyPopup(key, rem, btn); };
+    bar.appendChild(btn);
+    updateLottoAlertBadge();
+  } else {
+    btn.classList.add('done-early');
+    btn.title = 'Test eseguito — clicca per dettagli';
+    btn.onclick = function(e){ e.stopPropagation(); openDoneEarlyPopup(key, rem, btn); };
   }
 }
 
@@ -2086,6 +2483,8 @@ function checkReminders(){
   });
 
   updateLottoAlertBadge();
+  updateStatoBadge();
+  updateAttesaBtn();
 }
 
 function showReminderCard(rem, key, allRems){
@@ -2132,9 +2531,9 @@ function dismissReminderCard(key){
 }
 
 function lineaShortLabel(linea){
-  if(!linea) return '?';
+  if(!linea) return '—';
   const map={'BIANCHE L1':'BL1','SCURE L2':'SC2','SCURE L3':'SC3','BIANCHE L4':'BL4'};
-  return map[linea] || linea.substring(0,3).toUpperCase();
+  return map[linea] || linea.substring(0,4).toUpperCase();
 }
 
 function updateLottoAlertBadge(){
@@ -2170,25 +2569,76 @@ function createLottoAlertBtn(rem, key, allRems){
   bar.appendChild(btn);
 }
 
+let _popupCountdownInterval = null;
+
 function openLottoPopup(rem, allRems, anchorBtn){
   const popup = g('lotto-alert-popup');
-  const content = g('lap-content');
+  const contentEl = g('lap-content');
   _lottoPopupData = { rem, allRems };
 
-  const lineaTxt = rem.linea ? `<div class="lap-row"><span class="lap-lbl">Linea</span><span class="lap-val">${esc(rem.linea)}</span></div>` : '';
-  const descTxt = rem.desc ? `<div class="lap-row"><span class="lap-lbl">Descrizione</span><span class="lap-val" style="font-size:11px">${esc(rem.desc)}</span></div>` : '';
+  // Clear any previous countdown
+  if(_popupCountdownInterval){ clearInterval(_popupCountdownInterval); _popupCountdownInterval=null; }
 
-  // Build list of pending measurements
+  const descTxt = rem.desc ? `<div class="lap-row"><span class="lap-lbl">Descrizione</span><span class="lap-val" style="font-size:11px;line-height:1.4">${esc(rem.desc)}</span></div>` : '';
   const misure = allRems.map(r => r.measurement===2 ? '2ª misurazione' : '3ª misurazione').join(', ');
 
-  content.innerHTML = `
+  // Check if test was done early (all dismissed)
+  const allDone = allRems.every(r => r.dismissed);
+
+  // Determine time state
+  const now = Date.now();
+  const lateMs = now - rem.fireAt; // positive = overdue
+  const isLate = lateMs > 0;
+
+  // Format scheduled fire time as HH:MM
+  function fmtHHMM(ts){ const d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+  // Time row HTML (will be updated by countdown)
+  function buildTimeRow(){
+    const nowMs = Date.now();
+    const lateNow = nowMs - rem.fireAt;
+    if(lateNow <= 0){
+      // Still pending — should not happen since we only open when fired, but handle gracefully
+      const minsLeft = Math.ceil(-lateNow/60000);
+      return `<div class="lap-time-row on-time"><span>⏱ Scade alle ${fmtHHMM(rem.fireAt)}</span></div>`;
+    }
+    const totalSec = Math.floor(lateNow/1000);
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    let lateStr = h>0 ? h+'h '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'s'
+                      : m>0 ? m+'m '+String(s).padStart(2,'0')+'s'
+                            : s+'s';
+    return `<div class="lap-time-row late">⚠ In ritardo: <span class="lap-countdown" id="lap-cdown">${lateStr}</span> (previsto ${fmtHHMM(rem.fireAt)})</div>`;
+  }
+
+  // Build action button
+  let actionBtn = '';
+  if(allDone){
+    // Already registered before time — show green done
+    actionBtn = `<button class="lap-done-btn" onclick="closeLottoPopupAndDismiss('${rem.lotto}','${rem.prodotto}')">✓ Fatto — Chiudi notifica</button>`;
+  } else {
+    actionBtn = `<button class="lap-misura-btn" onclick="goMisuraFromPopup('${rem.lotto}','${rem.prodotto}','${esc(rem.desc||'')}','${rem.linea||''}')">📋 Vai a Misura</button>`;
+  }
+
+  contentEl.innerHTML = `
     <div class="lap-row"><span class="lap-lbl">Linea</span><span class="lap-val" style="color:#e07820;font-size:15px;font-weight:800">${esc(lineaShortLabel(rem.linea))}</span></div>
-    <div class="lap-row"><span class="lap-lbl">Lotto</span><span class="lap-val" style="color:#333;font-size:13px">${esc(rem.lotto)}</span></div>
+    <div class="lap-row"><span class="lap-lbl">Lotto</span><span class="lap-val" style="color:#333;font-size:13px;font-weight:700">${esc(rem.lotto)}</span></div>
     <div class="lap-row"><span class="lap-lbl">N° Prodotto</span><span class="lap-val">${esc(rem.prodotto)}</span></div>
     ${descTxt}
     <div class="lap-row" style="margin-top:4px"><span class="lap-lbl">Misure</span><span class="lap-val" style="color:#e07820">${esc(misure)}</span></div>
-    <div style="font-size:10px;color:#aaa;margin-top:6px">Scomparirà quando questo lotto verrà registrato di nuovo.</div>
+    <div id="lap-time-wrap">${buildTimeRow()}</div>
+    ${actionBtn}
   `;
+
+  // Live countdown: update every second if late
+  if(!allDone){
+    _popupCountdownInterval = setInterval(()=>{
+      const wrap = g('lap-time-wrap');
+      if(!wrap || !popup.classList.contains('open')){ clearInterval(_popupCountdownInterval); return; }
+      wrap.innerHTML = buildTimeRow();
+    }, 1000);
+  }
 
   // Position popup near the button
   const rect = anchorBtn.getBoundingClientRect();
@@ -2201,7 +2651,44 @@ function openLottoPopup(rem, allRems, anchorBtn){
   popup.classList.add('open');
 }
 
+/* Navigate to Nuova Registrazione pre-filling from popup reminder */
+function goMisuraFromPopup(lotto, prodotto, desc, linea){
+  closeLottoPopup();
+  const navBtn = g('nav-registra');
+  showPage('registra', navBtn);
+  resetForm();
+  sv('r-lotto', lotto);
+  sv('r-prodotto', prodotto);
+  sv('r-desc', desc);
+  if(linea){
+    sv('r-linea', linea);
+    document.querySelectorAll('#r-linea-group .linea-btn').forEach(b=>{
+      b.classList.toggle('active', b.textContent===lineaAbbr(linea));
+    });
+  }
+  sv('r-data', nowDate());
+  sv('r-ora', nowTime());
+  window.scrollTo({top:0, behavior:'smooth'});
+  toast('📋 Completa la misura — portata, potenza, micron e operatore', 'info');
+}
+
+/* Close popup and fully dismiss the reminder (done early button) */
+function closeLottoPopupAndDismiss(lotto, prodotto){
+  const key = lotto + '__' + prodotto;
+  closeLottoPopup();
+  // Mark all dismissed
+  const reminders = getReminders();
+  reminders.forEach(r=>{
+    if(r.lotto===lotto && r.prodotto===prodotto) r.dismissed=true;
+  });
+  saveReminders(reminders);
+  // Remove card and button
+  closeDoneEarlyCard(key);
+  updateStatoBadge();
+}
+
 function closeLottoPopup(){
+  if(_popupCountdownInterval){ clearInterval(_popupCountdownInterval); _popupCountdownInterval=null; }
   const popup = g('lotto-alert-popup');
   popup.classList.remove('open');
   _lottoPopupData = null;
@@ -2217,10 +2704,239 @@ document.addEventListener('click', function(e){
   }
 });
 
+/* ── DONE-EARLY POPUP (from green lotto button) ── */
+function openDoneEarlyPopup(key, rem, anchorBtn){
+  const popup = g('done-early-popup');
+  const content = g('dep-content');
+  if(!popup||!content) return;
+
+  // Find the card for doneAt time and fallback rem data
+  const card = document.getElementById('rc-' + key);
+  const doneAt = card ? card._doneAt : '—';
+  // Use rem passed in, then try card._rem as fallback (has linea stored)
+  const remObj = (rem && rem.linea) ? rem : (card && card._rem ? card._rem : rem);
+
+  const lotto = remObj ? remObj.lotto : key.split('__')[0];
+  const prodotto = remObj ? remObj.prodotto : key.split('__')[1];
+  const descTxt = remObj && remObj.desc ? `<div class="dep-row"><span class="dep-lbl">Descrizione</span><span class="dep-val" style="font-size:11px">${esc(remObj.desc)}</span></div>` : '';
+  const lineaFull = remObj ? (remObj.linea||'') : '';
+  const lineaShort = lineaFull ? lineaShortLabel(lineaFull) : '—';
+  const lineaDisplay = lineaFull ? `${lineaShort} — ${lineaFull}` : '—';
+
+  // Scheduled time
+  const schedHHMM = remObj && remObj.fireAt ? (()=>{ const d=new Date(remObj.fireAt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); })() : '—';
+
+  content.innerHTML = `
+    <div class="dep-row"><span class="dep-lbl">Linea</span><span class="dep-val" style="color:#3d7010;font-size:14px;font-weight:800">${esc(lineaDisplay)}</span></div>
+    <div class="dep-row"><span class="dep-lbl">Lotto</span><span class="dep-val" style="font-size:13px">${esc(lotto)}</span></div>
+    <div class="dep-row"><span class="dep-lbl">N° Prodotto</span><span class="dep-val">${esc(prodotto)}</span></div>
+    ${descTxt}
+    <div style="background:#edf7e0;border:1px solid #a8d880;border-radius:4px;padding:7px 10px;margin-top:6px;font-size:11px;">
+      <div style="color:#3d7010;font-weight:700;">✓ Test eseguito alle <strong>${doneAt}</strong></div>
+      <div style="color:#888;margin-top:2px;">Promemoria previsto per le ${schedHHMM}</div>
+    </div>
+    <button class="dep-fatto-btn" onclick="closeDoneEarlyAndDismiss('${key}')">✓ Fatto — Rimuovi notifica</button>
+  `;
+
+  // Position near anchor
+  if(anchorBtn){
+    const rect = anchorBtn.getBoundingClientRect();
+    popup.style.top = (rect.bottom + 8) + 'px';
+    let left = rect.left;
+    const pw = 320;
+    if(left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+    if(left < 8) left = 8;
+    popup.style.left = left + 'px';
+  } else {
+    popup.style.top = '80px'; popup.style.right = '10px'; popup.style.left = 'auto';
+  }
+  popup.classList.add('open');
+}
+
+function closeDoneEarlyPopup(){
+  const popup = g('done-early-popup');
+  if(popup) popup.classList.remove('open');
+}
+
+function closeDoneEarlyAndDismiss(key){
+  closeDoneEarlyPopup();
+  closeDoneEarlyCard(key);
+}
+
+// Close done-early popup on outside click
+document.addEventListener('click', function(e){
+  const popup = g('done-early-popup');
+  if(popup && popup.classList.contains('open')){
+    if(!popup.contains(e.target) && !e.target.closest('.lotto-alert-btn.done-early')){
+      closeDoneEarlyPopup();
+    }
+  }
+});
+
+/* ── ATTESA PANEL ── */
+function toggleAttesaPanel(e){
+  e.stopPropagation();
+  const panel = g('attesa-panel');
+  if(!panel) return;
+  if(panel.classList.contains('open')){ closeAttesaPanel(); return; }
+  renderAttesaList();
+  panel.classList.add('open');
+}
+
+function closeAttesaPanel(){
+  const panel = g('attesa-panel');
+  if(panel) panel.classList.remove('open');
+}
+
+document.addEventListener('click', function(e){
+  const panel = g('attesa-panel');
+  if(panel && panel.classList.contains('open')){
+    if(!panel.contains(e.target) && !e.target.closest('#hdr-attesa-btn')){
+      closeAttesaPanel();
+    }
+  }
+});
+
+function renderAttesaList(){
+  const list = g('attesa-list');
+  if(!list) return;
+  const reminders = getReminders();
+  const now = Date.now();
+  // All undismissed (pending AND fired/overdue)
+  const active = reminders.filter(r => !r.dismissed);
+  // Group by lotto+prodotto
+  const groups = {};
+  active.forEach(r => {
+    const key = r.lotto + '__' + r.prodotto;
+    if(!groups[key]) groups[key] = { rem: r, rems: [] };
+    groups[key].rems.push(r);
+  });
+  const keys = Object.keys(groups);
+  if(!keys.length){
+    list.innerHTML = '<div class="ap-empty">Nessun test in attesa</div>';
+    return;
+  }
+  // Sort: overdue first, then by earliest fireAt
+  keys.sort((a,b) => groups[a].rem.fireAt - groups[b].rem.fireAt);
+
+  list.innerHTML = keys.map(key => {
+    const { rem, rems } = groups[key];
+    const fireDate = new Date(rem.fireAt);
+    const hhmm = String(fireDate.getHours()).padStart(2,'0')+':'+String(fireDate.getMinutes()).padStart(2,'0');
+    const minsLeft = Math.round((rem.fireAt - now)/60000);
+    const timeStr = minsLeft >= 60 ? Math.floor(minsLeft/60)+'h '+String(minsLeft%60).padStart(2,'0')+'m' : Math.abs(minsLeft)+'min';
+    const isLate = now >= rem.fireAt;
+    const lineaLbl = lineaShortLabel(rem.linea);
+    const isScure = rem.linea && rem.linea.startsWith('SCURE');
+    const misure = rems.map(r => r.measurement===2 ? '2ª' : '3ª').join('+');
+    const btnLabel = isLate ? '📋 Vai a Misura' : '📋 Test Anticipato';
+    const btnColor = isLate ? '#cc1111' : '#e07820';
+    return `<div class="ap-row">
+      <div class="ap-linea${isScure?' scure':''}">${esc(lineaLbl)}</div>
+      <div class="ap-info">
+        <div class="ap-lotto">${esc(rem.lotto)}</div>
+        <div class="ap-prod">${esc(rem.prodotto)}${rem.desc ? ' — '+rem.desc.substring(0,30) : ''} · ${misure} mis.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <div class="ap-time${isLate?' late':''}">${hhmm}</div>
+        <div class="ap-time-sub">${isLate ? '⚠ scaduto' : 'tra ' + timeStr}</div>
+        <button onclick="attesaTestAnticipato('${key}')" style="padding:3px 8px;background:${btnColor};color:#fff;border:none;border-radius:3px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap" title="Esegui il test">${btnLabel}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+/* ── ATTESA TEST ANTICIPATO ── */
+function attesaTestAnticipato(key){
+  closeAttesaPanel();
+  const reminders = getReminders();
+  // Find first non-dismissed reminder for this key
+  const rem = reminders.find(r => !r.dismissed && (r.lotto+'__'+r.prodotto)===key);
+  if(!rem){ toast('Promemoria non trovato', 'err'); return; }
+  goMisuraFromPopup(rem.lotto, rem.prodotto, rem.desc||'', rem.linea||'');
+}
+
+function updateAttesaBtn(){
+  const btn = g('hdr-attesa-btn');
+  const countEl = g('attesa-count');
+  if(!btn||!countEl) return;
+  const reminders = getReminders();
+  // Count ALL undismissed (pending + fired)
+  const active = reminders.filter(r => !r.dismissed);
+  // Group by lotto+prodotto
+  const keys = new Set(active.map(r => r.lotto+'__'+r.prodotto));
+  const n = keys.size;
+  if(n > 0){
+    btn.classList.add('visible');
+    countEl.textContent = n;
+  } else {
+    btn.classList.remove('visible');
+    countEl.textContent = '0';
+    closeAttesaPanel();
+  }
+}
+
+/* ── STATO BADGE ── */
+function updateStatoBadge(){
+  const badge = g('stato-badge');
+  if(!badge) return;
+  const reminders = getReminders();
+  const now = Date.now();
+
+  // Count active (undismissed) reminders
+  const pending = reminders.filter(r => !r.dismissed && now < r.fireAt);
+  const fired   = reminders.filter(r => !r.dismissed && now >= r.fireAt);
+
+  // Count green (done-early) buttons currently showing
+  const doneBtns = document.querySelectorAll('.lotto-alert-btn.done-early').length;
+  const alertBtns = document.querySelectorAll('.lotto-alert-btn:not(.done-early)').length;
+
+  if(alertBtns > 0){
+    // Active reminders fired — need attention
+    badge.className = 'stato-badge stato-alert';
+    badge.textContent = '⏰ TEST ORA';
+    badge.title = alertBtns + ' test micron da eseguire';
+  } else if(pending.length > 0){
+    // Reminders scheduled but not yet fired
+    badge.className = 'stato-badge stato-pending';
+    badge.textContent = '⏱ IN ATTESA';
+    badge.title = pending.length + ' promemoria attivi';
+  } else if(doneBtns > 0){
+    // Only done-early green buttons visible
+    badge.className = 'stato-badge stato-done';
+    badge.textContent = '✓ ESEGUITO';
+    badge.title = 'Test micron eseguiti prima del promemoria';
+  } else {
+    badge.className = 'stato-badge stato-idle';
+    badge.textContent = '🏭 CREME';
+    badge.title = 'Nessun test micron programmato';
+  }
+}
+
+function onStatoBadgeClick(){
+  // If there are active (fired) alerts, scroll to them / open first popup
+  const alertBtns = document.querySelectorAll('.lotto-alert-btn:not(.done-early)');
+  if(alertBtns.length > 0){ alertBtns[0].click(); return; }
+  // If pending, show info toast
+  const reminders = getReminders();
+  const now = Date.now();
+  const pending = reminders.filter(r => !r.dismissed && now < r.fireAt);
+  if(pending.length > 0){
+    const minLeft = Math.ceil((pending[0].fireAt - now)/60000);
+    toast('⏱ Prossimo test tra circa ' + minLeft + ' min — Lotto: ' + pending[0].lotto, 'info');
+    return;
+  }
+  // Otherwise just show info
+  toast('🏭 Reparto Creme — nessun test micron programmato', 'info');
+}
+
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded',()=>{
   // Start reminder checker — runs every 30 seconds
   checkReminders();
+  updateStatoBadge();
+  updateAttesaBtn();
   setInterval(checkReminders, 5000);
   initClock();updateCount();
   g('edit-ov').addEventListener('click',e=>{if(e.target===g('edit-ov'))closeEdit()});
